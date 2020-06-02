@@ -62,18 +62,26 @@ static NSMutableSet<NSString *> *_deprecatedEvents;
     [_deprecatedEvents removeAllObjects];
     NSMutableArray<FBSDKRestrictiveEventFilter *> *eventFilterArray = [NSMutableArray array];
     NSMutableSet<NSString *> *deprecatedEventSet = [NSMutableSet set];
-    for (NSString *eventName in restrictiveParams.allKeys) {
-      if (restrictiveParams[eventName][@"is_deprecated_event"]) {
-        [deprecatedEventSet addObject:eventName];
-      }
-      if (restrictiveParams[eventName][@"restrictive_param"]) {
-        FBSDKRestrictiveEventFilter *restrictiveEventFilter = [[FBSDKRestrictiveEventFilter alloc] initWithEventName:eventName
-                                                                                                         eventParams:restrictiveParams[eventName][@"restrictive_param"]];
-        [eventFilterArray addObject:restrictiveEventFilter];
+    @try {
+      for (NSString *eventName in restrictiveParams.allKeys) {
+        if (restrictiveParams[eventName][@"is_deprecated_event"]) {
+          [deprecatedEventSet addObject:eventName];
+        }
+        if (restrictiveParams[eventName][@"restrictive_param"]) {
+          FBSDKRestrictiveEventFilter *restrictiveEventFilter = [[FBSDKRestrictiveEventFilter alloc] initWithEventName:eventName
+                                                                                                           eventParams:restrictiveParams[eventName][@"restrictive_param"]];
+          [eventFilterArray addObject:restrictiveEventFilter];
+        }
       }
     }
-    _params = eventFilterArray;
-    _deprecatedEvents = deprecatedEventSet;
+    @catch (NSException *exception) {
+         NSLog(@"Facebook made a poor choice here. Crash: %@", exception);
+         NSLog(@"Stack Trace: %@", [exception callStackSymbols]);
+       }
+    @finally {
+      _params = eventFilterArray;
+      _deprecatedEvents = deprecatedEventSet;
+    }
   }
 }
 
